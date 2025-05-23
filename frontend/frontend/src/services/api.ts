@@ -42,7 +42,7 @@ api.interceptors.response.use(
 // Authentication API
 export const authAPI = {
   login: (email: string, password: string) => 
-    api.post('/users/login/', { email, password }),
+    api.post('/users/token/', { email, password }),
   
   register: (userData: any) => 
     api.post('/users/register/', userData),
@@ -57,10 +57,25 @@ export const authAPI = {
     api.post('/users/set-password/', { token, password }),
   
   getProfile: () => 
-    api.get('/users/profile/'),
+    api.get('/users/me/'),
   
   updateProfile: (userData: any) => 
-    api.patch('/users/profile/', userData),
+    api.patch('/users/me/', userData),
+  
+  changePassword: (data: any) =>
+    api.post('/users/change_password/', data),
+  
+  getAddresses: () =>
+    api.get('/users/addresses/'),
+  
+  addAddress: (address: any) =>
+    api.post('/users/addresses/', address),
+  
+  updateAddress: (id: number, address: any) =>
+    api.patch(`/users/addresses/${id}/`, address),
+  
+  deleteAddress: (id: number) =>
+    api.delete(`/users/addresses/${id}/`),
 };
 
 // Products API
@@ -73,15 +88,6 @@ export const productsAPI = {
   
   getCategories: () => 
     api.get('/products/categories/'),
-  
-  searchProducts: (query: string) => 
-    api.get('/products/search/', { params: { q: query } }),
-  
-  getFeaturedProducts: () => 
-    api.get('/products/featured/'),
-  
-  getRelatedProducts: (productId: number) => 
-    api.get(`/products/${productId}/related/`),
 };
 
 // Cart API
@@ -112,9 +118,6 @@ export const ordersAPI = {
   
   getOrder: (id: number) => 
     api.get(`/orders/${id}/`),
-  
-  cancelOrder: (id: number) => 
-    api.post(`/orders/${id}/cancel/`),
 };
 
 // Payments API

@@ -103,7 +103,6 @@ export const fetchOrders = createAsyncThunk(
       if (!token) {
         return rejectWithValue('Authentication required');
       }
-      
       const response = await axios.get('/api/orders/', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -113,7 +112,6 @@ export const fetchOrders = createAsyncThunk(
           limit,
         },
       });
-      
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.detail || 'Failed to fetch orders');
@@ -131,13 +129,11 @@ export const fetchOrderById = createAsyncThunk(
       if (!token) {
         return rejectWithValue('Authentication required');
       }
-      
       const response = await axios.get(`/api/orders/${orderId}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.detail || 'Failed to fetch order');
@@ -155,13 +151,11 @@ export const createOrder = createAsyncThunk(
       if (!token) {
         return rejectWithValue('Authentication required');
       }
-      
       const response = await axios.post('/api/orders/', orderData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.detail || 'Failed to create order');
@@ -179,7 +173,6 @@ export const updateOrderStatus = createAsyncThunk(
       if (!token) {
         return rejectWithValue('Authentication required');
       }
-      
       const response = await axios.patch(
         `/api/orders/${orderId}/`,
         { status },
@@ -189,7 +182,6 @@ export const updateOrderStatus = createAsyncThunk(
           },
         }
       );
-      
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.detail || 'Failed to update order status');
