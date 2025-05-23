@@ -3,8 +3,8 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 // Import translations
-import enTranslation from './locales/en/translation.json';
-import arTranslation from './locales/ar/translation.json';
+import enCommon from './locales/en/translation.json';
+import arCommon from './locales/ar/translation.json';
 
 i18n
   // detect user language
@@ -20,10 +20,10 @@ i18n
     },
     resources: {
       en: {
-        translation: enTranslation
+        translation: enCommon.en // Access the nested translations
       },
       ar: {
-        translation: arTranslation
+        translation: arCommon.ar // Assuming similar structure for Arabic
       }
     },
     react: {

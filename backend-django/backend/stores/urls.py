@@ -6,7 +6,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from .views import StoreViewSet, DomainViewSet, StoreLocationViewSet
+from .views import StoreViewSet, DomainViewSet, StoreLocationViewSet, nearby_stores
 
 # Create a router and register viewsets
 router = DefaultRouter()
@@ -21,6 +21,7 @@ locations_router.register(r'locations', StoreLocationViewSet, basename='store-lo
 
 # URL patterns
 urlpatterns = [
+    path('nearby/', nearby_stores, name='store-nearby'),
     # Include router URLs
     path('', include(router.urls)),
     path('', include(domains_router.urls)),

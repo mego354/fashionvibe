@@ -77,7 +77,11 @@ const themeColors: { name: ThemeColor; color: string }[] = [
   { name: 'forest', color: '#14532d' }
 ];
 
-const ThemeSelector: React.FC = () => {
+interface ThemeSelectorProps {
+  isMobile?: boolean;
+}
+
+const ThemeSelector: React.FC<ThemeSelectorProps> = ({ isMobile = false }) => {
   const { t, i18n } = useTranslation();
   const dispatch = useDispatch();
   const theme = useSelector((state: RootState) => selectTheme(state));
@@ -103,6 +107,42 @@ const ThemeSelector: React.FC = () => {
     dispatch(setRTL(rtl));
     i18n.changeLanguage(rtl ? 'ar' : 'en');
   };
+
+  if (isMobile) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm">
+            {theme.mode === 'dark' ? (
+              <Moon className="h-4 w-4 mr-2" />
+            ) : (
+              <Sun className="h-4 w-4 mr-2" />
+            )}
+            {t('common.theme')}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => handleModeChange('light')}>
+            <Sun className="h-4 w-4 mr-2" />
+            {t('common.lightMode')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleModeChange('dark')}>
+            <Moon className="h-4 w-4 mr-2" />
+            {t('common.darkMode')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleModeChange('system')}>
+            <Monitor className="h-4 w-4 mr-2" />
+            {t('common.systemMode')}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setOpen(true)}>
+            <Palette className="h-4 w-4 mr-2" />
+            {t('common.customizeTheme')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
   return (
     <>

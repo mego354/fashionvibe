@@ -20,11 +20,28 @@ import SuperAdminDashboard from './pages/super-admin-dashboard';
 import LoginPage from './pages/login-page';
 import RegisterPage from './pages/register-page';
 import NotFoundPage from './pages/not-found-page';
+import AboutPage from './pages/about-page';
+import ContactPage from './pages/contact-page';
+import PlansPage from './pages/plans-page';
+import HowToUsePage from './pages/how-to-use-page';
+import HowToSubscribePage from './pages/how-to-subscribe-page';
+import StorefrontPage from './pages/storefront-page';
 
 // Auth
 import { authAPI } from './services/api';
 import { setUser, clearUser } from './store/authSlice';
 import ProtectedRoute from './components/protected-route';
+
+// Create a PageLayout component to wrap the pages - using a different name to avoid conflicts
+const PageLayout = ({ children }) => {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-grow">{children}</main>
+      <Footer />
+    </div>
+  );
+};
 
 const App = () => {
   const { i18n } = useTranslation();
@@ -55,68 +72,76 @@ const App = () => {
     document.documentElement.dir = direction;
   }, [direction]);
 
+  // Wrapper for applying layout to routes
+  const withLayout = (Component) => (
+    <PageLayout>
+      <Component />
+    </PageLayout>
+  );
+
   return (
-    <ThemeProvider>
-      <div className="min-h-screen flex flex-col">
-        {/* <Header /> */}
-        <main className="flex-grow">
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/products/:productId" element={<ProductDetailPage />} />
-            <Route path="/category/:categoryId" element={<CategoryPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            {/* Protected routes */}
-            <Route 
-              path="/checkout" 
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <CheckoutPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/account/*" 
-              element={
-                <ProtectedRoute isAuthenticated={isAuthenticated}>
-                  <AccountPage />
-                </ProtectedRoute>
-              } 
-            />
-            {/* Store admin routes */}
-            <Route 
-              path="/admin/*" 
-              element={
-                <ProtectedRoute 
-                  isAuthenticated={isAuthenticated} 
-                  requiredRole="store_admin"
-                  userRole={user?.role}
-                >
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            {/* Super admin routes */}
-            <Route 
-              path="/super-admin/*" 
-              element={
-                <ProtectedRoute 
-                  isAuthenticated={isAuthenticated} 
-                  requiredRole="super_admin"
-                  userRole={user?.role}
-                >
-                  <SuperAdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            {/* 404 route */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-        {/* <Footer /> */}
-      </div>
+    <ThemeProvider userRole={user?.role}>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products/:productId" element={withLayout(ProductDetailPage)} />
+        <Route path="/category/:categoryId" element={withLayout(CategoryPage)} />
+        <Route path="/cart" element={withLayout(CartPage)} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/about" element={withLayout(AboutPage)} />
+        <Route path="/contact" element={withLayout(ContactPage)} />
+        <Route path="/plans" element={withLayout(PlansPage)} />
+        <Route path="/how-to-use" element={withLayout(HowToUsePage)} />
+        <Route path="/how-to-subscribe" element={withLayout(HowToSubscribePage)} />
+        <Route path="/store/:storeId" element={<StorefrontPage />} />
+        
+        {/* Protected routes */}
+        <Route 
+          path="/checkout" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              {withLayout(CheckoutPage)}
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/account/*" 
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              {withLayout(AccountPage)}
+            </ProtectedRoute>
+          } 
+        />
+        {/* Store admin routes */}
+        <Route 
+          path="/admin/*" 
+          element={
+            <ProtectedRoute 
+              isAuthenticated={isAuthenticated} 
+              requiredRole="store_admin"
+              userRole={user?.role}
+            >
+              {withLayout(AdminDashboard)}
+            </ProtectedRoute>
+          } 
+        />
+        {/* Super admin routes */}
+        <Route 
+          path="/super-admin/*" 
+          element={
+            <ProtectedRoute 
+              isAuthenticated={isAuthenticated} 
+              requiredRole="super_admin"
+              userRole={user?.role}
+            >
+              {withLayout(SuperAdminDashboard)}
+            </ProtectedRoute>
+          } 
+        />
+        {/* 404 route */}
+        <Route path="*" element={withLayout(NotFoundPage)} />
+      </Routes>
     </ThemeProvider>
   );
 };

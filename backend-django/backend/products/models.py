@@ -9,6 +9,7 @@ from django.contrib.postgres.indexes import GinIndex
 
 from common.models import TimeStampedModel, TranslatedField
 from common.utils import generate_unique_slug, get_file_path
+from stores.models import Store
 
 
 class Category(TimeStampedModel, TranslatedField):
@@ -20,6 +21,7 @@ class Category(TimeStampedModel, TranslatedField):
     image = models.ImageField(_("Image"), upload_to=get_file_path, blank=True, null=True)
     is_active = models.BooleanField(_("Is active"), default=True)
     order = models.PositiveIntegerField(_("Order"), default=0)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='categories')
     
     class Meta:
         verbose_name = _("Category")
@@ -78,6 +80,8 @@ class Product(TimeStampedModel, TranslatedField):
         null=True,
         verbose_name=_("Search tags")
     )
+    
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='products')
     
     class Meta:
         verbose_name = _("Product")
@@ -156,6 +160,8 @@ class Variant(TimeStampedModel):
     # Variant attributes (e.g., color, size)
     attributes = models.JSONField(_("Attributes"), default=dict)
     
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='variants')
+    
     class Meta:
         verbose_name = _("Variant")
         verbose_name_plural = _("Variants")
@@ -178,6 +184,8 @@ class ProductReview(TimeStampedModel):
     title = models.CharField(_("Title"), max_length=100)
     comment = models.TextField(_("Comment"))
     is_approved = models.BooleanField(_("Is approved"), default=False)
+    
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name='product_reviews')
     
     class Meta:
         verbose_name = _("Product review")

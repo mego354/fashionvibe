@@ -8,8 +8,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import gettext_lazy as _
+from rest_framework.parsers import JSONParser
 
-from common.permissions import IsStoreOwnerOrManager, IsStoreStaff
+from common.permissions import IsStoreOwnerOrManager, IsStoreStaff, IsOwnerOrAdminOrReadOnly
 from .models import Category, Product, ProductImage, Variant, ProductReview
 from .serializers import (
     CategorySerializer, ProductSerializer, ProductImageSerializer,
@@ -23,11 +24,18 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_active', 'parent']
     search_fields = ['name_en', 'name_ar', 'description_en', 'description_ar']
     ordering_fields = ['name_en', 'order', 'created_at']
+    
+    def get_queryset(self):
+        store = getattr(self.request, 'tenant', None) or getattr(self.request.user, 'store', None)
+        qs = Category.objects.all()
+        if store:
+            qs = qs.filter(store=store)
+        return qs
     
     def get_permissions(self):
         """
@@ -50,14 +58,27 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class ProductViewSet(viewsets.ModelViewSet):
     """
     API endpoint for products.
+    Supports:
+    - List (GET): Filtering, searching, ordering, pagination
+    - Create (POST): Single or bulk (via /bulk-create/)
+    - Retrieve (GET): Single product
+    - Update (PUT/PATCH): Single or bulk (via /bulk-update/)
+    - Destroy (DELETE): Single or bulk (via /bulk-delete/)
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'is_active', 'is_featured', 'is_new', 'is_on_sale']
     search_fields = ['name_en', 'name_ar', 'description_en', 'description_ar', 'sku', 'search_tags']
     ordering_fields = ['name_en', 'price', 'created_at']
+    
+    def get_queryset(self):
+        store = getattr(self.request, 'tenant', None) or getattr(self.request.user, 'store', None)
+        qs = Product.objects.all()
+        if store:
+            qs = qs.filter(store=store)
+        return qs
     
     def get_serializer_class(self):
         """
@@ -95,22 +116,69 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = ProductReviewSerializer(reviews, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['post'], url_path='bulk-create', parser_classes=[JSONParser])
+    def bulk_create(self, request):
+        """
+        Bulk create products.
+        """
+        serializer = ProductCreateUpdateSerializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_bulk_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_bulk_create(self, serializer):
+        serializer.save()
+
+    @action(detail=False, methods=['put'], url_path='bulk-update', parser_classes=[JSONParser])
+    def bulk_update(self, request):
+        """
+        Bulk update products. Expects a list of objects with 'id'.
+        """
+        items = request.data
+        if not isinstance(items, list):
+            return Response({'detail': 'Expected a list of objects.'}, status=status.HTTP_400_BAD_REQUEST)
+        updated = []
+        for item in items:
+            try:
+                instance = Product.objects.get(id=item['id'])
+            except Product.DoesNotExist:
+                continue
+            serializer = ProductCreateUpdateSerializer(instance, data=item, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            updated.append(serializer.data)
+        return Response(updated, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], url_path='bulk-delete', parser_classes=[JSONParser])
+    def bulk_delete(self, request):
+        """
+        Bulk delete products. Expects a list of IDs.
+        """
+        ids = request.data.get('ids', [])
+        if not isinstance(ids, list):
+            return Response({'detail': 'Expected a list of IDs.'}, status=status.HTTP_400_BAD_REQUEST)
+        products = Product.objects.filter(id__in=ids)
+        count = products.count()
+        products.delete()
+        return Response({'deleted': count}, status=status.HTTP_200_OK)
+
 
 class ProductImageViewSet(viewsets.ModelViewSet):
     """
     API endpoint for product images.
     """
     serializer_class = ProductImageSerializer
-    permission_classes = [IsAuthenticated, IsStoreOwnerOrManager]
+    permission_classes = [IsAuthenticated, IsStoreOwnerOrManager, IsOwnerOrAdminOrReadOnly]
     
     def get_queryset(self):
-        """
-        Filter images based on product.
-        """
+        store = getattr(self.request, 'tenant', None) or getattr(self.request.user, 'store', None)
         product_id = self.kwargs.get('product_pk')
+        qs = ProductImage.objects.all()
         if product_id:
-            return ProductImage.objects.filter(product_id=product_id)
-        return ProductImage.objects.none()
+            qs = qs.filter(product_id=product_id)
+        if store:
+            qs = qs.filter(product__store=store)
+        return qs
     
     def perform_create(self, serializer):
         """
@@ -142,16 +210,17 @@ class VariantViewSet(viewsets.ModelViewSet):
     API endpoint for product variants.
     """
     serializer_class = VariantSerializer
-    permission_classes = [IsAuthenticated, IsStoreOwnerOrManager]
+    permission_classes = [IsAuthenticated, IsStoreOwnerOrManager, IsOwnerOrAdminOrReadOnly]
     
     def get_queryset(self):
-        """
-        Filter variants based on product.
-        """
+        store = getattr(self.request, 'tenant', None) or getattr(self.request.user, 'store', None)
         product_id = self.kwargs.get('product_pk')
+        qs = Variant.objects.all()
         if product_id:
-            return Variant.objects.filter(product_id=product_id)
-        return Variant.objects.none()
+            qs = qs.filter(product_id=product_id)
+        if store:
+            qs = qs.filter(store=store)
+        return qs
     
     def perform_create(self, serializer):
         """
@@ -167,19 +236,21 @@ class ProductReviewViewSet(viewsets.ModelViewSet):
     API endpoint for product reviews.
     """
     serializer_class = ProductReviewSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrAdminOrReadOnly]
     
     def get_queryset(self):
-        """
-        Filter reviews based on product and approval status.
-        """
+        store = getattr(self.request, 'tenant', None) or getattr(self.request.user, 'store', None)
         product_id = self.kwargs.get('product_pk')
+        qs = ProductReview.objects.all()
         if product_id:
-            # Regular users can only see approved reviews
+            qs = qs.filter(product_id=product_id)
+        if store:
+            qs = qs.filter(store=store)
+        if product_id:
             if self.request.user.is_authenticated and (self.request.user.is_store_owner or self.request.user.is_store_manager):
-                return ProductReview.objects.filter(product_id=product_id)
-            return ProductReview.objects.filter(product_id=product_id, is_approved=True)
-        return ProductReview.objects.none()
+                return qs
+            return qs.filter(is_approved=True)
+        return qs.none()
     
     def perform_create(self, serializer):
         """

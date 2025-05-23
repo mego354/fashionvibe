@@ -2,38 +2,28 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  withCredentials: true,
 });
 
-// Request interceptor for adding auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+// Request interceptor for JWT and language
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
-);
+  const lang = localStorage.getItem('lang') || 'en';
+  config.headers['Accept-Language'] = lang;
+  return config;
+});
 
-// Response interceptor for handling errors
+// Response interceptor for error handling
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
-    // Handle 401 Unauthorized errors
+    // Optionally handle global errors, e.g. token expiry
     if (error.response && error.response.status === 401) {
-      // Clear local storage and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Handle unauthorized (logout, redirect, etc.)
     }
     return Promise.reject(error);
   }

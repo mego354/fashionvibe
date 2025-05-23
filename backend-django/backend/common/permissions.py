@@ -46,3 +46,19 @@ class IsStoreStaff(permissions.BasePermission):
         
         # Check if user is store staff
         return request.user.is_store_staff
+
+
+class IsOwnerOrAdminOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow owners or admins to edit/delete an object.
+    Safe methods are allowed to any request.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Allow safe methods for all
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        # Allow write/delete to owner or admin
+        user = request.user
+        is_owner = hasattr(obj, 'owner') and obj.owner == user
+        is_admin = getattr(user, 'is_superuser', False) or getattr(user, 'role', None) in ['admin', 'superadmin']
+        return is_owner or is_admin

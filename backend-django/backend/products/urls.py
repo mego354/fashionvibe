@@ -34,3 +34,5 @@ urlpatterns = [
     path('', include(variants_router.urls)),
     path('', include(reviews_router.urls)),
 ]
+
+# Bulk operations are available at /products/bulk-create/, /products/bulk-update/, /products/bulk-delete/

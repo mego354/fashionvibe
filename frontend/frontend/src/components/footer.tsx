@@ -24,7 +24,7 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="mb-4 text-lg font-medium">{t('common.about')}</h3>
             <p className="text-muted-foreground mb-4">
-              {t('footer.aboutDescription')}
+              {t('aboutDescription')}
             </p>
             <div className="flex space-x-4">
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
@@ -52,7 +52,7 @@ const Footer: React.FC = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="mb-4 text-lg font-medium">{t('footer.quickLinks')}</h3>
+            <h3 className="mb-4 text-lg font-medium">{t('quickLinks')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -89,31 +89,31 @@ const Footer: React.FC = () => {
 
           {/* Customer Service */}
           <div>
-            <h3 className="mb-4 text-lg font-medium">{t('footer.customerService')}</h3>
+            <h3 className="mb-4 text-lg font-medium">{t('customerService')}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/faq" className="text-muted-foreground hover:text-foreground transition-colors">
-                  {t('footer.faq')}
+                  {t('faq')}
                 </Link>
               </li>
               <li>
                 <Link to="/shipping" className="text-muted-foreground hover:text-foreground transition-colors">
-                  {t('footer.shipping')}
+                  {t('shipping')}
                 </Link>
               </li>
               <li>
                 <Link to="/returns" className="text-muted-foreground hover:text-foreground transition-colors">
-                  {t('footer.returns')}
+                  {t('returns')}
                 </Link>
               </li>
               <li>
                 <Link to="/privacy-policy" className="text-muted-foreground hover:text-foreground transition-colors">
-                  {t('footer.privacyPolicy')}
+                  {t('privacyPolicy')}
                 </Link>
               </li>
               <li>
                 <Link to="/terms-of-service" className="text-muted-foreground hover:text-foreground transition-colors">
-                  {t('footer.termsOfService')}
+                  {t('termsOfService')}
                 </Link>
               </li>
             </ul>
@@ -121,20 +121,20 @@ const Footer: React.FC = () => {
 
           {/* Newsletter */}
           <div>
-            <h3 className="mb-4 text-lg font-medium">{t('footer.newsletter')}</h3>
+            <h3 className="mb-4 text-lg font-medium">{t('newsletter')}</h3>
             <p className="text-muted-foreground mb-4">
-              {t('footer.newsletterDescription')}
+              {t('newsletterDescription')}
             </p>
             <form onSubmit={handleSubscribe} className="space-y-2">
               <Input
                 type="email"
-                placeholder={t('footer.emailPlaceholder')}
+                placeholder={t('emailPlaceholder')}
                 value={email}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                 required
               />
               <Button type="submit" className="w-full">
-                {t('footer.subscribe')}
+                {t('subscribe')}
               </Button>
             </form>
           </div>
@@ -144,7 +144,7 @@ const Footer: React.FC = () => {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
               <p className="text-sm text-muted-foreground">
-                &copy; {new Date().getFullYear()} Fashion Hub. {t('footer.allRightsReserved')}
+                &copy; {new Date().getFullYear()} Fashion Hub. {t('allRightsReserved')}
               </p>
             </div>
             <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6">

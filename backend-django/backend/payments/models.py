@@ -116,3 +116,13 @@ class SubscriptionPayment(TimeStampedModel):
     
     def __str__(self):
         return self.payment_id
+
+
+class WebhookLog(models.Model):
+    event_type = models.CharField(max_length=50)
+    payload = models.JSONField()
+    headers = models.JSONField()
+    status_code = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"{self.event_type} - {self.created_at}"

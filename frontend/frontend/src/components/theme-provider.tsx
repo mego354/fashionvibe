@@ -6,6 +6,7 @@ type ThemeProviderProps = {
   children: React.ReactNode
   defaultTheme?: Theme
   storageKey?: string
+  userRole?: string | null
 }
 
 type ThemeProviderState = {
@@ -24,35 +25,52 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "vite-ui-theme",
+  userRole = null,
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = localStorage.getItem(storageKey) as Theme | null;
+    if (userRole === 'store_admin') {
+      return stored || defaultTheme;
+    } else {
+      // Only allow dark/light for non-store_admin
+      if (stored === 'dark' || stored === 'light') return stored;
+      return 'light';
+    }
+  });
 
   useEffect(() => {
     const root = window.document.documentElement
-    
     root.classList.remove("light", "dark")
-    
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-      
-      root.classList.add(systemTheme)
-      return
+    if (userRole === 'store_admin') {
+      if (theme === "system") {
+        const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+          .matches
+          ? "dark"
+          : "light"
+        root.classList.add(systemTheme)
+        return
+      }
+      root.classList.add(theme)
+    } else {
+      // Only allow dark/light for non-store_admin
+      root.classList.add(theme === 'dark' ? 'dark' : 'light');
     }
-    
-    root.classList.add(theme)
-  }, [theme])
+  }, [theme, userRole])
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
+    setTheme: (newTheme: Theme) => {
+      if (userRole === 'store_admin') {
+        localStorage.setItem(storageKey, newTheme)
+        setTheme(newTheme)
+      } else {
+        // Only allow dark/light for non-store_admin
+        if (newTheme === 'dark' || newTheme === 'light') {
+          localStorage.setItem(storageKey, newTheme)
+          setTheme(newTheme)
+        }
+      }
     },
   }
 

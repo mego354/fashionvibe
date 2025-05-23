@@ -11,23 +11,33 @@ import {
 } from '../components/ui/dropdown-menu';
 import { Languages } from 'lucide-react';
 
-const LanguageSelector: React.FC = () => {
+interface LanguageSelectorProps {
+  isMobile?: boolean;
+}
+
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ isMobile = false }) => {
   const { t, i18n } = useTranslation();
   const currentLanguage = i18n.language;
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
-    // Set document direction based on language
     document.documentElement.dir = lng === 'ar' ? 'rtl' : 'ltr';
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Languages className="h-5 w-5" />
-          <span className="sr-only">{t('common.language')}</span>
-        </Button>
+        {isMobile ? (
+          <Button variant="ghost" size="sm">
+            <Languages className="h-4 w-4 mr-2" />
+            {t('common.language')}
+          </Button>
+        ) : (
+          <Button variant="ghost" size="icon">
+            <Languages className="h-5 w-5" />
+            <span className="sr-only">{t('common.language')}</span>
+          </Button>
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('common.language')}</DropdownMenuLabel>

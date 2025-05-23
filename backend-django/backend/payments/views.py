@@ -4,6 +4,8 @@ Payment views for the Fashion Hub project.
 
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils.translation import gettext_lazy as _
@@ -13,9 +15,11 @@ import json
 import hmac
 import hashlib
 import uuid
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 
 from common.permissions import IsStoreOwnerOrManager
-from .models import Payment, SubscriptionPayment
+from .models import Payment, SubscriptionPayment, WebhookLog
 from .serializers import (
     PaymentSerializer, SubscriptionPaymentSerializer,
     PaymentInitiateSerializer, SubscriptionPaymentInitiateSerializer
@@ -335,16 +339,28 @@ class SubscriptionPaymentViewSet(viewsets.ReadOnlyModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class WebhookAnonThrottle(AnonRateThrottle):
+    rate = '10/min'
+
+@method_decorator(csrf_exempt, name='dispatch')
 class PaymentWebhookView(generics.GenericAPIView):
     """
     Webhook for Paymob payment callbacks.
     """
     permission_classes = []  # No authentication required for webhooks
+    throttle_classes = [WebhookAnonThrottle]
     
     def post(self, request, *args, **kwargs):
         """
         Handle Paymob payment webhook.
         """
+        # Log the incoming payload
+        WebhookLog.objects.create(
+            event_type='paymob',
+            payload=request.data,
+            headers=dict(request.headers),
+            status_code=0
+        )
         # Verify HMAC signature
         hmac_secret = settings.PAYMOB_HMAC_SECRET
         data = request.data
@@ -408,4 +424,17 @@ class PaymentWebhookView(generics.GenericAPIView):
                 subscription.is_active = True
                 subscription.save()
         
+        # Idempotency: check if already processed
+        if hasattr(payment, 'webhook_processed') and payment.webhook_processed:
+            return Response(status=status.HTTP_200_OK)
+        payment.webhook_processed = True
+        payment.save()
+        
+        # Log the response
+        WebhookLog.objects.create(
+            event_type='paymob',
+            payload=request.data,
+            headers=dict(request.headers),
+            status_code=200 if success else 400
+        )
         return Response(status=status.HTTP_200_OK)

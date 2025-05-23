@@ -77,6 +77,10 @@ class Store(TimeStampedModel, TranslatedField):
     # Auto-create schema
     auto_create_schema = True
     
+    # New fields
+    latitude = models.DecimalField(_('Latitude'), max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(_('Longitude'), max_digits=9, decimal_places=6, null=True, blank=True)
+    
     class Meta:
         verbose_name = _("Store")
         verbose_name_plural = _("Stores")
