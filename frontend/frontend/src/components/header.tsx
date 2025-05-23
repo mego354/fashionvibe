@@ -266,7 +266,7 @@ const Header: React.FC = () => {
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center space-x-3">
-          {renderMobileNav()}
+          {/* {renderMobileNav()} */}
           {renderLogo()}
         </div>
         {renderDesktopNav()}
@@ -274,8 +274,8 @@ const Header: React.FC = () => {
           {renderSearchBar()}
           {renderCartButton()}
           <div className="hidden md:flex items-center space-x-2">
-            <ThemeSelector />
-            <LanguageSelector />
+            {/* <ThemeSelector />
+            <LanguageSelector /> */}
           </div>
           {renderUserMenu()}
         </div>

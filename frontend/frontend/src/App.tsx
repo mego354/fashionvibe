@@ -36,9 +36,9 @@ import ProtectedRoute from './components/protected-route';
 const PageLayout = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      {/* <Header /> */}
       <main className="flex-grow">{children}</main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };
